@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "app.py",
+      "src": "gunicorn app:app",
       "use": "@now/python",
       "config": { "maxLambdaSize": "10mb", "pythonVersion": "3.9" }
     }
@@ -10,7 +10,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "app.py"
+      "dest": "gunicorn app:app"
     }
   ]
 }
