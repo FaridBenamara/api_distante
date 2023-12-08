@@ -2,7 +2,7 @@ from flask import Flask, jsonify
 from sqlalchemy import create_engine, text
 from sshtunnel import SSHTunnelForwarder
 import json
-
+import pandas as pd
 app = Flask(__name__)
 
 def create_engine_with_ssh():
@@ -27,7 +27,17 @@ def execute_select_query(engine, query):
     with engine.connect() as connection:
         result_proxy = connection.execute(text(query))
         return result_proxy
+def calculer_ev_projet(engine):
+    query_work_elements = "SELECT * FROM attribut;"
+    work_elements = pd.read_sql_query(query_work_elements, engine)
 
+    # Calculer le p_acc(WE) × Valeur(WE) pour chaque work_element
+    work_elements['ev'] = work_elements['percent_accomplished'] * work_elements['attributevalue']
+
+    # Calculer la somme des produits pour obtenir la Valeur Économique du projet
+    ev_projet = work_elements['ev'].sum()
+
+    return jsonify({"ev_projet": ev_projet})
 @app.route('/test', methods=['GET'])
 def test_query():
     engine, server = create_engine_with_ssh()
@@ -49,6 +59,11 @@ def test_query():
         return json_data
     finally:
         server.stop()
+@app.route('/ev_projet', methods=['GET'])
+def ev_projet_route():
+    engine, _ = create_engine_with_ssh()
+    result = calculer_ev_projet(engine)
+    return result
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
