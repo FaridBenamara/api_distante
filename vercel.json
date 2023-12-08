@@ -2,17 +2,22 @@
   "version": 2,
   "builds": [
     {
-      "src": "/api_distante_test.py",  
-      "use": "@now/python" 
+      "src": "/api_distante_test.py",  // Chemin vers le fichier principal de votre application Flask
+      "use": "@now/python"  // Utilisation du builder Python de Vercel
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/api_distante_test.py"  
+      "dest": "/api_distante_test.py"  // Chemin vers le fichier principal de votre application Flask
     }
   ],
   "env": {
-    "FLASK_ENV": "production"  
+    "FLASK_ENV": "production"  // Configuration de l'environnement Flask (production, development, etc.)
+  },
+  "functions": {
+    "api_distante_test": {
+      "runtime": "python3.9"
+    }
   }
 }
