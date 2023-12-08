@@ -73,12 +73,8 @@ def test_query():
         # Récupérez les résultats sous forme de dictionnaires
         data = [dict(zip(column_names, row)) for row in result_proxy.fetchall()]
 
-        # Manually serialize data to JSON
-        json_data = json.dumps({"data": data})
-
-        return json_data
-    finally:
-        server.stop()
+        # Utilisez jsonify pour créer une réponse JSON
+        return jsonify({"data": data})
 
 @app.route('/ev_projet', methods=['GET'])
 def ev_projet_route():
