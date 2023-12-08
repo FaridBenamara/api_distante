@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify,render_template
 from sqlalchemy import create_engine, text
 from sshtunnel import SSHTunnelForwarder
 import json
@@ -57,7 +57,9 @@ def calculer_valeur_projet(engine):
     valeur_projet = (dataframe['load_engage'] * dataframe['attribute_value']).sum()
 
     return jsonify({"valeur_projet": valeur_projet})
-
+@app.route('/', methods=['GET'])
+def home():
+    return render_template('index.html', message="API en cours de développement")
 @app.route('/test', methods=['GET'])
 def test_query():
     engine, server = create_engine_with_ssh()
