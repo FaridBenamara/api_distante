@@ -3,6 +3,7 @@ from sqlalchemy import create_engine, text
 from sshtunnel import SSHTunnelForwarder
 import json
 import pandas as pd
+
 app = Flask(__name__)
 
 def create_engine_with_ssh():
@@ -27,6 +28,7 @@ def execute_select_query(engine, query):
     with engine.connect() as connection:
         result_proxy = connection.execute(text(query))
         return result_proxy
+
 def calculer_ev_projet(engine):
     query_work_elements = "SELECT * FROM attribut;"
     work_elements = pd.read_sql_query(query_work_elements, engine)
@@ -38,6 +40,24 @@ def calculer_ev_projet(engine):
     ev_projet = work_elements['ev'].sum()
 
     return jsonify({"ev_projet": ev_projet})
+
+def calculer_valeur_projet(engine):
+    query = "SELECT * FROM attribut;"
+    dataframe = pd.read_sql_query(query, engine)
+
+    dataframe['load_engage'] = pd.to_numeric(dataframe['load_engage'], errors='coerce')
+
+    total_load_engage = dataframe['load_engage'].sum()
+
+    if total_load_engage == 0:
+        return jsonify({"error": "La somme des charges engagées est égale à zéro."})
+
+    dataframe['attribute_value'] = dataframe['load_engage'] / total_load_engage
+
+    valeur_projet = (dataframe['load_engage'] * dataframe['attribute_value']).sum()
+
+    return jsonify({"valeur_projet": valeur_projet})
+
 @app.route('/test', methods=['GET'])
 def test_query():
     engine, server = create_engine_with_ssh()
@@ -59,11 +79,17 @@ def test_query():
         return json_data
     finally:
         server.stop()
+
 @app.route('/ev_projet', methods=['GET'])
 def ev_projet_route():
     engine, _ = create_engine_with_ssh()
     result = calculer_ev_projet(engine)
     return result
+
+@app.route('/valeur_projet')
+def index_valeur_projet():
+    engine, _ = create_engine_with_ssh()
+    return calculer_valeur_projet(engine)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True)
