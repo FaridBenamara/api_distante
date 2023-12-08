@@ -61,20 +61,18 @@ def calculer_valeur_projet(engine):
 @app.route('/test', methods=['GET'])
 def test_query():
     engine, server = create_engine_with_ssh()
+    # Test SELECT query
+    select_query = "SELECT weid, load_engage FROM attribut;"
+    result_proxy = execute_select_query(engine, select_query)
 
-    try:
-        # Test SELECT query
-        select_query = "SELECT weid, load_engage FROM attribut;"
-        result_proxy = execute_select_query(engine, select_query)
+    # Obtenez les noms de colonnes directement à partir de l'objet ResultProxy
+    column_names = result_proxy.keys()
 
-        # Obtenez les noms de colonnes directement à partir de l'objet ResultProxy
-        column_names = result_proxy.keys()
+    # Récupérez les résultats sous forme de dictionnaires
+    data = [dict(zip(column_names, row)) for row in result_proxy.fetchall()]
 
-        # Récupérez les résultats sous forme de dictionnaires
-        data = [dict(zip(column_names, row)) for row in result_proxy.fetchall()]
-
-        # Utilisez jsonify pour créer une réponse JSON
-        return jsonify({"data": data})
+    # Utilisez jsonify pour créer une réponse JSON
+    return jsonify({"data": data})
 
 @app.route('/ev_projet', methods=['GET'])
 def ev_projet_route():
