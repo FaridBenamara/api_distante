@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "/api_distante_test.py",  
+      "use": "@now/python" 
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api_distante_test.py"  
+    }
+  ],
+  "env": {
+    "FLASK_ENV": "production"  
+  }
+}
