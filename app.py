@@ -1,10 +1,9 @@
 from flask import Flask, jsonify
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
 from sshtunnel import SSHTunnelForwarder
+import json
 
 app = Flask(__name__)
-
 
 def create_engine_with_ssh():
     # SSH tunneling configuration
@@ -24,29 +23,32 @@ def create_engine_with_ssh():
 
     return engine, server
 
-
 def execute_select_query(engine, query):
     with engine.connect() as connection:
-        result = connection.execute(text(query)).fetchall()
-        return result
-
+        result_proxy = connection.execute(text(query))
+        return result_proxy
 
 @app.route('/test', methods=['GET'])
 def test_query():
     engine, server = create_engine_with_ssh()
 
-    # Test SELECT query
-    select_query = "SELECT * FROM attribut;"
-    result = execute_select_query(engine, select_query)
+    try:
+        # Test SELECT query
+        select_query = "SELECT weid, load_engage FROM attribut;"
+        result_proxy = execute_select_query(engine, select_query)
 
-    server.stop()
+        # Obtenez les noms de colonnes directement à partir de l'objet ResultProxy
+        column_names = result_proxy.keys()
 
-    # Format the result as a JSON response
-    columns = result[0].keys() if result else []
-    data = [dict(zip(columns, row)) for row in result]
+        # Récupérez les résultats sous forme de dictionnaires
+        data = [dict(zip(column_names, row)) for row in result_proxy.fetchall()]
 
-    return jsonify({"data": data})
+        # Manually serialize data to JSON
+        json_data = json.dumps({"data": data})
 
+        return json_data
+    finally:
+        server.stop()
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0")
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', debug=True)
