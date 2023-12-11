@@ -82,28 +82,34 @@ def test_query():
 def calculer_pourcentage_lin():
     engine, server = create_engine_with_ssh()
 
-    start_date_engage_query = "SELECT MIN(start_date_engage) FROM attribut;"
-    end_date_engage_query = "SELECT MAX(end_date_engage) FROM attribut;"
+    # Utiliser une session pour interagir avec la base de données
+    Session = sessionmaker(bind=engine)
+    session = Session()
 
-    date_now = datetime.now()
-    start_date_engage = engine.execute(start_date_engage_query).scalar()
-    end_date_engage = engine.execute(end_date_engage_query).scalar()
+    try:
+        start_date_engage_query = session.execute("SELECT MIN(start_date_engage) FROM attribut;").scalar()
+        end_date_engage_query = session.execute("SELECT MAX(end_date_engage) FROM attribut;").scalar()
 
-    if start_date_engage and end_date_engage:
-        start_date_engage = datetime.combine(start_date_engage, datetime.min.time())
-        end_date_engage = datetime.combine(end_date_engage, datetime.min.time())
+        date_now = datetime.now()
 
-        pourcentageacc_project_query = """
-            SELECT SUM(a.percent_accomplished * b.load_reel) / SUM(b.load_reel) AS percent_acc_p
-            FROM attribut a, program_backlog b
-        """
-        result = engine.execute(pourcentageacc_project_query).scalar()
+        if start_date_engage_query and end_date_engage_query:
+            start_date_engage = datetime.combine(start_date_engage_query, datetime.min.time())
+            end_date_engage = datetime.combine(end_date_engage_query, datetime.min.time())
 
-        # Calculer %linacc
-        if result is not None:
-            percent_linacc = result * (date_now - start_date_engage).total_seconds() / (
-                        end_date_engage - start_date_engage).total_seconds()
-            return percent_linacc
+            pourcentageacc_project_query = """
+                SELECT SUM(a.percent_accomplished * b.load_reel) / SUM(b.load_reel) AS percent_acc_p
+                FROM attribut a, program_backlog b
+            """
+            result = session.execute(pourcentageacc_project_query).scalar()
+
+            # Calculer %linacc
+            if result is not None:
+                percent_linacc = result * (date_now - start_date_engage).total_seconds() / (
+                            end_date_engage - start_date_engage).total_seconds()
+                return percent_linacc
+
+    finally:
+        session.close()
 
     return None
 @app.route('/ev_projet', methods=['GET'])
