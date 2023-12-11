@@ -3,7 +3,7 @@ from sqlalchemy import create_engine, text
 from sshtunnel import SSHTunnelForwarder
 import json
 import pandas as pd
-
+from datetime import datetime 
 app = Flask(__name__)
 
 def create_engine_with_ssh():
@@ -79,7 +79,33 @@ def test_query():
         return jsonify({"data": data})
     finally:
         server.stop()
+def calculer_pourcentage_lin():
+    engine, server = create_engine_with_ssh()
 
+    start_date_engage_query = "SELECT MIN(start_date_engage) FROM attribut;"
+    end_date_engage_query = "SELECT MAX(end_date_engage) FROM attribut;"
+
+    date_now = datetime.now()
+    start_date_engage = engine.execute(start_date_engage_query).scalar()
+    end_date_engage = engine.execute(end_date_engage_query).scalar()
+
+    if start_date_engage and end_date_engage:
+        start_date_engage = datetime.combine(start_date_engage, datetime.min.time())
+        end_date_engage = datetime.combine(end_date_engage, datetime.min.time())
+
+        pourcentageacc_project_query = """
+            SELECT SUM(a.percent_accomplished * b.load_reel) / SUM(b.load_reel) AS percent_acc_p
+            FROM attribut a, program_backlog b
+        """
+        result = engine.execute(pourcentageacc_project_query).scalar()
+
+        # Calculer %linacc
+        if result is not None:
+            percent_linacc = result * (date_now - start_date_engage).total_seconds() / (
+                        end_date_engage - start_date_engage).total_seconds()
+            return percent_linacc
+
+    return None
 @app.route('/ev_projet', methods=['GET'])
 def ev_projet_route():
     engine, _ = create_engine_with_ssh()
@@ -87,7 +113,10 @@ def ev_projet_route():
     
     # Utilisez jsonify pour créer une réponse JSON
     return result
-
+@app.route('/calculer_pourcentage_lin', methods=['GET'])
+def calculer_pourcentage_lin_route():
+    result = calculer_pourcentage_lin()
+    return jsonify({"percent_linacc": result})
 @app.route('/valeur_projet')
 def index_valeur_projet():
     engine, _ = create_engine_with_ssh()
