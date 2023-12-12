@@ -67,24 +67,24 @@ def test_query():
     try:
         # Test SELECT query
         select_query = """
-    SELECT
-        public.organization.id,
-        public.organization.title,
-        public.unit.id,
-        public.unit.name,
-        public.program_backlog.id,
-        public.program_backlog.programname,
-        public.team.id,
-        public.team.libelle,
-        public.team.name
-    FROM
-        public.organization
-    JOIN
-        public.unit ON public.organization.id = public.unit.organization_id
-    JOIN
-        public.program_backlog ON public.unit.id = CAST(public.program_backlog.id AS INTEGER)
-    JOIN
-        public.team ON public.unit.id = public.team."idUnit";
+SELECT
+    public.organization.id,
+    public.organization.title,
+    public.unit.id,
+    public.unit.name,
+    public.program_backlog.id,
+    public.program_backlog.programname,
+    public.team.id,
+    public.team.libelle,
+    public.team.name
+FROM
+    public.organization
+JOIN
+    public.unit ON public.organization.id = public.unit.organization_id
+JOIN
+    public.program_backlog ON public.unit.id = CAST(public.program_backlog.id AS INTEGER)
+JOIN
+    public.team ON public.unit.id = public.team."idUnit";
 """
 
         result_proxy = execute_select_query(engine, select_query)
