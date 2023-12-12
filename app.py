@@ -19,7 +19,7 @@ def create_engine_with_ssh():
 
     # Create SQLAlchemy engine with SSH tunnel
     local_port = str(server.local_bind_port)
-    db_uri = f"postgresql://postgres:postgres@127.0.0.1:{local_port}/BD_Farid"
+    db_uri = f"postgresql://postgres:postgres@127.0.0.1:{local_port}/Konatus_DATABASE_bakup"
     engine = create_engine(db_uri)
 
     return engine, server
