@@ -66,7 +66,7 @@ def test_query():
 
     try:
         # Test SELECT query
-        select_query = "SELECT weid, load_engage FROM attribut;"
+        select_query = "SELECT * FROM program_backlog;"
         result_proxy = execute_select_query(engine, select_query)
 
         # Obtenez les noms de colonnes directement à partir de l'objet ResultProxy
